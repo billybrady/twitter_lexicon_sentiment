@@ -78,7 +78,7 @@ scale
 w_sent <- warren_tidy %>% left_join(get_sentiments('afinn')) 
 
 # plot most frequent negative or positive words
-# score < 1 = negative sentiment, score < 1 = negative sentiment
+# score < 1 = negative sentiment, score > 1 = positive sentiment
 w_sent %>% filter(score < 1) %>% count(word) %>% 
   top_n(15) %>% mutate(word = reorder(word, n)) %>% 
   ggplot(aes(word, n, color = "red", fill = "red")) +
