@@ -61,25 +61,22 @@ warren_tidy <- warren_clean %>%
   # remove numbers
   filter(!str_detect(word, "^[0-9]*$")) %>%
   # remove stop words
-  anti_join(stop_words) %>%
-  # stem the words
-  mutate(word = SnowballC::wordStem(word))
+  anti_join(stop_words)
 ```
 
 ## 3 - Perform sentiment analysis with AFINN lexicon
 
 The [AFINN
-lexicon](\(http://corpustext.com/reference/sentiment_afinn.html\))
-measures negative / positive valence on a -5 to +5
-scale
+lexicon]((http://corpustext.com/reference/sentiment_afinn.html))
+measures negative / positive valence on a -5 to +5 scale
 
 ``` r
 # note there are other lexicons you can call see ?get_sentiments for details
 w_sent <- warren_tidy %>% left_join(get_sentiments('afinn')) 
 
 # plot most frequent negative or positive words
-# score < 1 = negative sentiment, score < 1 = negative sentiment
-w_sent %>% filter(score < 1) %>% count(word) %>% 
+# value < 0 = negative sentiment, value > 0 = positive sentiment
+w_sent %>% filter(value < 0) %>% count(word) %>% 
   top_n(15) %>% mutate(word = reorder(word, n)) %>% 
   ggplot(aes(word, n, color = "red", fill = "red")) +
   geom_col(show.legend = FALSE) +
@@ -96,7 +93,7 @@ ill”). We can get rid of this misclassification in the plot by adding to
 the filter statement in the plot code:
 
 ``` r
-w_sent %>% filter(score < 1 & word != "ill") %>% count(word) %>% 
+w_sent %>% filter(value < 0 & word != "ill") %>% count(word) %>% 
   top_n(15) %>% mutate(word = reorder(word, n)) %>% 
   ggplot(aes(word, n, color = "red", fill = "red")) +
   geom_col(show.legend = FALSE) +
@@ -136,9 +133,7 @@ bernie_tidy <- bernie_clean %>%
   # remove numbers
   filter(!str_detect(word, "^[0-9]*$")) %>%
   # remove stop words
-  anti_join(stop_words) %>%
-  # stem the words
-  mutate(word = SnowballC::wordStem(word))
+  anti_join(stop_words)
 ```
 
 ## 6 - Compare Warren and Bernie most frequent negative words
@@ -148,15 +143,15 @@ bernie_tidy <- bernie_clean %>%
 b_sent <- bernie_tidy %>% left_join(get_sentiments('afinn')) 
 
 # pull Warren and Bernie's top 10 most used neg emo words
-w_freqemo <- w_sent %>% filter(score < 1 & word != "ill") %>% count(word) %>% 
+w_freqemo <- w_sent %>% filter(value < 0 & word != "ill") %>% count(word) %>% 
   top_n(10) %>% mutate(word = reorder(word, n)) 
 w_freqemo <- w_freqemo %>% mutate(elite = "Warren")
 
-b_freqemo <- b_sent %>% filter(score < 1) %>% count(word) %>% 
+b_freqemo <- b_sent %>% filter(value < 0) %>% count(word) %>% 
   top_n(10) %>% mutate(word = reorder(word, n)) 
 b_freqemo <- b_freqemo %>% mutate(elite = "Sanders")
 
-#combine data sets for plot
+# combine data sets for plot
 w_b <- rbind(w_freqemo, b_freqemo)
 
 # often both elites will have similar words in their top 10, and this confuses ggplot so it plots one elite out of frequency order
@@ -165,14 +160,14 @@ w_b <- w_b %>% mutate(word = factor(word)) %>%
   mutate(word = ifelse(elite == 'Warren', str_c(' ',word), str_c('',word))) %>% 
   mutate(word = fct_reorder(word, n))
 
-#make a nice plot
+# make a nice plot
 w_b %>% ggplot(aes(word, n, fill = elite)) +
   scale_fill_manual(values = c("dodgerblue2", "firebrick2")) +
   geom_col(show.legend = FALSE) +
   facet_wrap(~ elite, scales = "free") +
   coord_flip() +
   theme_bw()+
-  labs(y = "Negative Word", x = "Frequency") +
+  labs(y = "Frequency", x = "Negative Word") +
   theme(axis.title = element_text(face="bold")) 
 ```
 
@@ -211,28 +206,26 @@ wb_tidy <- wb_time %>%
   # remove numbers
   filter(!str_detect(word, "^[0-9]*$")) %>%
   # remove stop words
-  anti_join(stop_words) %>%
-  # stem the words
-  mutate(word = SnowballC::wordStem(word))
+  anti_join(stop_words)
 ```
 
 Analyze sentiment
 
 ``` r
-#perform sentiment analysis (valence) using AFINN dictionary
+# perform sentiment analysis (valence) using AFINN dictionary
 wb_sent <- wb_tidy %>% left_join(get_sentiments('afinn')) 
 
-#collapse back to tweet-level based on idx
+# collapse back to tweet-level based on idx
 wb_time_sent <- wb_sent %>% group_by(idx) %>% summarize(screen_name = first(screen_name),
                                                         day = first(day),
-                                                        sentiment = mean(score, na.rm = TRUE))
+                                                        sentiment = mean(value, na.rm = TRUE))
 
-#get day-level sentiment in tweets
+# get day-level sentiment in tweets
 wb_time_sent_day <- wb_time_sent %>% group_by(day) %>% summarize(screen_name = first(screen_name),
                                                         sentiment = mean(sentiment, na.rm = TRUE))
 
 
-#make sure month is a date/time object again
+# make sure month is a date/time object again
 wb_time_sent_day <- wb_time_sent_day %>% mutate(day = ymd(day))
 ```
 
@@ -276,8 +269,8 @@ wb_time_sent_trim %>%
 
 ![](twitter_sentiment_lexicon_files/figure-gfm/senttime5-1.png)<!-- -->
 
-We see both Warren and Sanders have downward trend in mean daily
-sentiment (their tweets are getting more negative over time). However,
-Sanders’ tweets are getting slightly more negative than Warren according
-to this analysis (if you plot on your machine the difference will be
-more noticable when the graph is larger). \#FeeltheBern?
+We see Sanders has downward trend in mean daily sentiment (tweets are
+getting more negative over time). However, Sanders’ tweets are getting
+more negative than Warren lately (if you plot on your machine the
+difference will be more noticable when the graph is larger).
+\#FeeltheBern?
