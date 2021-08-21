@@ -75,8 +75,13 @@ measures negative / positive valence on a -5 to +5 scale
 w_sent <- warren_tidy %>% left_join(get_sentiments('afinn')) 
 
 # plot most frequent negative or positive words
+<<<<<<< HEAD
 # value < 0 = negative sentiment, value > 0 = positive sentiment
 w_sent %>% filter(value < 0) %>% count(word) %>% 
+=======
+# score < 1 = negative sentiment, score > 1 = positive sentiment
+w_sent %>% filter(score < 1) %>% count(word) %>% 
+>>>>>>> d32484bf3abec9224bf8d90e4c895d7f314a2fd6
   top_n(15) %>% mutate(word = reorder(word, n)) %>% 
   ggplot(aes(word, n, color = "red", fill = "red")) +
   geom_col(show.legend = FALSE) +
